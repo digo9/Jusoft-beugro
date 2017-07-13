@@ -12,43 +12,50 @@ public class Main {
 	public static void main(String[] args) throws NumberFormatException, ApiException, InterruptedException, IOException {
 		Scanner input = new Scanner(System.in);
 		String inputString = "0";
-		int inputSzam = 0;
+		int inputInt = 0;
 		
 		final String API_KEY = "AIzaSyBYLh5oDyGX9CFGu5lcFx76YVc51084bz4";
 		GeoApiContext context = new GeoApiContext().setApiKey(API_KEY);
 		
-		while(inputSzam != 3) {
+		while(inputInt != 3) {
 			System.out.println("Ird be a kivant muvelet sorszamat:");
 			System.out.println("1 - Koordinatak lekerese foldralyzi nev alapjan");
 			System.out.println("2 - Foldralyzi nev lekerese koordinatak alapjan");
 			System.out.println("3 - Kilepes");
-			try{
+			try{ // If the parseInt method fails, the Scanner throws a Number Format Exception.
 				inputString = input.nextLine();
-				inputSzam = Integer.parseInt(inputString);
+				inputInt = Integer.parseInt(inputString);
 			}catch(NumberFormatException nfe) {
-				inputSzam = 0;
+				inputInt = 0; // We give "inputInt" a value other than 1, 2 or 3, to trigger the default label in the switch statement.
 			}
-			//folrajziNev próba: "1600 Amphitheatre Parkway Mountain View, CA 94043"
-			if(inputSzam == 1) {
+			switch(inputInt) {
+			case 1:
+			// For a location input, "case 1" gives coordinates as an output.
 				System.out.println("1 - Ird be a foldrajzi nevet!");
-				String foldrajziNev = input.nextLine();
-				GeocodingResult[] results =  GeocodingApi.geocode(context, foldrajziNev).await();
-				System.out.println(results[0].formattedAddress);
+				String inputLocation = input.nextLine();
+				GeocodingResult[] resultsGeo =  GeocodingApi.geocode(context, inputLocation).await();
+				System.out.println(resultsGeo[0].geometry.location);
 				
-			}else if(inputSzam == 2) {
+				break;
+			case 2:
+			// For coordinates as input, "case 2" gives a location as an output.
 				System.out.println("2 - Ird be a szelesseget!");
-				double szelesseg = input.nextDouble();
+				double latitude = input.nextDouble();
 				System.out.println("Ird be a hosszusagot!");
-				double hosszusag = input.nextDouble();
-				LatLng latLng = new LatLng(hosszusag, szelesseg);
-				GeocodingResult[] results =  GeocodingApi.reverseGeocode(context, latLng).await();
-				System.out.println(results[0].formattedAddress);
+				double longitude = input.nextDouble();
+				LatLng latLng = new LatLng(latitude, longitude); // Merging "latitude" and "longitude" into one variable.
+				GeocodingResult[] resultsReverseGeo =  GeocodingApi.reverseGeocode(context, latLng).await();
+				System.out.println(resultsReverseGeo[0].formattedAddress);
 				
-			}else if(inputSzam == 3) {
+				break;
+			case 3:
+			// Closing the program and the scanner as well.
 				System.out.println("Kilepes");
 				input.close();
-			}else {
+				break;
+			default:
 				System.err.println("Ervenytelen bemenet!");
+				break;
 			}
 		}
 	}

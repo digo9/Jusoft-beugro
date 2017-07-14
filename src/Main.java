@@ -21,10 +21,15 @@ import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.LatLng;
 
 public class Main {
+	public enum userChoice{
+		// We store the available menu choices in an enum.
+		invalid, geocode, reverseGeocode, exit;
+	}
 	public static void main(String[] args) throws NumberFormatException, ApiException, InterruptedException, IOException {
 		Scanner input = new Scanner(System.in);
 		String inputString = "";
 		int inputInt = 0;
+		userChoice choice = null;
 		
 		// Reading the API key out of the config.properties file located in the resources folder.
 		Properties prop = new Properties();
@@ -39,42 +44,43 @@ public class Main {
 		// Giving the API the key from the config.
 		GeoApiContext context = new GeoApiContext().setApiKey(prop.getProperty("apikey"));
 		
-		// Starting program cycle.
-		while(inputInt != 3) {
+		while(choice != userChoice.exit) {
 			System.out.println("Ird be a kivant muvelet sorszamat:");
 			System.out.println("1 - Koordinatak lekerese foldralyzi nev alapjan");
 			System.out.println("2 - Foldralyzi nev lekerese koordinatak alapjan");
 			System.out.println("3 - Kilepes");
-			try{ // If the parseInt method fails, the Scanner throws a Number Format Exception.
+			try{ 
+			// If the parseInt method fails, the Scanner throws a Number Format Exception.
 				inputString = input.nextLine();
 				inputInt = Integer.parseInt(inputString);
-			}catch(NumberFormatException nfe) {
-				inputInt = 0; // We give "inputInt" a value other than 1, 2 or 3, to trigger the default label in the switch statement.
+				choice = userChoice.values()[inputInt];
+				
+			}catch(Exception e) {
+				// We give "choice" the value "invalid" to trigger the default label in the switch statement.
+				choice = userChoice.invalid;
 			}
 			try {
-				switch(inputInt) {
-				case 1:
-				// For a location input, "case 1" gives coordinates as an output.
-					inputInt = 1;
+				switch(choice) {
+				case geocode:
+				// For a location input, "case geocode" gives coordinates as an output.
 					System.out.println("1 - Ird be a foldrajzi nevet!");
 					String inputLocation = input.nextLine();
+					// Using the API's geocoding service.
 					GeocodingResult[] resultsGeo =  GeocodingApi.geocode(context, inputLocation).await();
 					System.out.println(resultsGeo[0].geometry.location);
-					
 					break;
-				case 2:
-				// For coordinates as input, "case 2" gives a location as an output.
-					inputInt = 2;
-					System.out.println("2 - Ird be a szelesseget!");
+				case reverseGeocode:
+				// For coordinates as input, "case reverseGeocode" gives a location as an output.
+					System.out.println("2 - Ird be a szelesseget! (pl.: 46,53097790)");
 					double latitude = input.nextDouble();
-					System.out.println("Ird be a hosszusagot!");
+					System.out.println("Ird be a hosszusagot! (pl.: 20,96994310)");
 					double longitude = input.nextDouble();
 					LatLng latLng = new LatLng(latitude, longitude); // Merging "latitude" and "longitude" into one variable.
+					// Using the API's reverse geocoding service.
 					GeocodingResult[] resultsReverseGeo =  GeocodingApi.reverseGeocode(context, latLng).await();
 					System.out.println(resultsReverseGeo[0].formattedAddress);
-					
 					break;
-				case 3:
+				case exit:
 				// Closing the program and the scanner as well.
 					System.out.println("Kilepes");
 					input.close();
@@ -82,6 +88,7 @@ public class Main {
 				default:
 				// Everything else is considered as a wrong input.
 					System.err.println("Ervenytelen bemenet!");
+					choice = null;
 					break;
 				}
 			}catch(InputMismatchException ime) {
@@ -101,7 +108,6 @@ public class Main {
 			}catch(InvalidRequestException ire) {
 				System.err.println("Hianyos lekerdezes!");
 			}catch(UnknownErrorException uee) {
-				// TODO: make it possible to resend the query.
 				System.err.println("Szerver oldali hiba!");
 				System.out.println("Az ujboli lekerdezes megoldhatja a prolemat.");
 			}

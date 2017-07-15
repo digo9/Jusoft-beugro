@@ -21,17 +21,19 @@ import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.LatLng;
 
 public class Main {
+	
 	public enum userChoice{
 		// We store the available menu choices in an enum.
 		invalid, geocode, reverseGeocode, exit;
 	}
+	
 	public static void main(String[] args) throws NumberFormatException, ApiException, InterruptedException, IOException {
-		Scanner input = new Scanner(System.in);
+		Scanner input;
 		String inputString = "";
 		int inputInt = 0;
 		userChoice choice = null;
 		
-		// Reading the API key out of the config.properties file located in the resources folder.
+		// Reading the API key out from the config.properties file.
 		Properties prop = new Properties();
 		InputStream propInput = null;
 		try {
@@ -41,22 +43,22 @@ public class Main {
 			System.err.println("Ervenytelen API kulcs!");
 			System.exit(1);
 		}
-		// Giving the API the key from the config.
+		// Giving the API the key.
 		GeoApiContext context = new GeoApiContext().setApiKey(prop.getProperty("apikey"));
 		
 		while(choice != userChoice.exit) {
+			input = new Scanner(System.in);
 			System.out.println("Ird be a kivant muvelet sorszamat:");
 			System.out.println("1 - Koordinatak lekerese foldralyzi nev alapjan");
 			System.out.println("2 - Foldralyzi nev lekerese koordinatak alapjan");
 			System.out.println("3 - Kilepes");
 			try{ 
-			// If the parseInt method fails, the Scanner throws a Number Format Exception.
+			// If any of these methods throw an exception then it is an invalid input.
 				inputString = input.nextLine();
 				inputInt = Integer.parseInt(inputString);
 				choice = userChoice.values()[inputInt];
-				
 			}catch(Exception e) {
-				// We give "choice" the value "invalid" to trigger the default label in the switch statement.
+			// We give "choice" the value "invalid" to trigger the default label in the switch statement.
 				choice = userChoice.invalid;
 			}
 			try {
@@ -67,6 +69,7 @@ public class Main {
 					String inputLocation = input.nextLine();
 					// Using the API's geocoding service.
 					GeocodingResult[] resultsGeo =  GeocodingApi.geocode(context, inputLocation).await();
+					System.out.println("Találat: " + resultsGeo[0].formattedAddress);
 					System.out.println(resultsGeo[0].geometry.location);
 					break;
 				case reverseGeocode:
@@ -98,7 +101,7 @@ public class Main {
 				System.err.println("Nincs internet eleres!");
 			}catch(ArrayIndexOutOfBoundsException aie){ 
 				// TODO
-				System.err.println("Error");
+				System.err.println("error");
 			}catch(ZeroResultsException zre) {
 				System.out.println("Nincs talalat.");
 			}catch(OverQueryLimitException oqle) {

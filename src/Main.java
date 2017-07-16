@@ -1,12 +1,14 @@
 /*
  * @author Szabo Gyorgy
  */
-import java.io.FileInputStream;
+//import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+//import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.InputMismatchException;
-import java.util.Properties;
+//import java.util.MissingResourceException;
+//import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.Scanner;
 
 import com.google.maps.GeoApiContext;
@@ -33,18 +35,27 @@ public class Main {
 		int inputInt = 0;
 		userChoice choice = null;
 		
+		/*
+		ResourceBundle bundle = ResourceBundle.getBundle("ApplicationMessages_hu_HU");
+        System.out.println(bundle.getString("CountryName"));
+		*/
+		
 		// Reading the API key out from the config.properties file.
-		Properties prop = new Properties();
-		InputStream propInput = null;
-		try {
-			propInput = new FileInputStream("resources/config.properties");
-			prop.load(propInput);
-		} catch (IOException ioe) {
-			System.err.println("Ervenytelen API kulcs!");
-			System.exit(1);
-		}
+		//Properties prop = new Properties();
+		//InputStream propInput = null;
+		
+		//try {
+			//propInput = new FileInputStream("resources/config.properties");
+			//prop.load(propInput);
+		//} catch (IOException ioe) {
+			//System.err.println("Ervenytelen API kulcs!");
+			//System.exit(1);
+		//}
+		ResourceBundle bundle = ResourceBundle.getBundle("config");
+		GeoApiContext context = new GeoApiContext().setApiKey(bundle.getString("apikey"));
 		// Giving the API the key.
-		GeoApiContext context = new GeoApiContext().setApiKey(prop.getProperty("apikey"));
+		//GeoApiContext context = new GeoApiContext().setApiKey(prop.getProperty("apikey"));
+		
 		
 		while(choice != userChoice.exit) {
 			input = new Scanner(System.in);
@@ -53,7 +64,7 @@ public class Main {
 			System.out.println("2 - Foldralyzi nev lekerese koordinatak alapjan");
 			System.out.println("3 - Kilepes");
 			try{ 
-			// If any of these methods throw an exception then it is an invalid input.
+			// These methods would only throw exceptions for invalid inputs.
 				inputString = input.nextLine();
 				inputInt = Integer.parseInt(inputString);
 				choice = userChoice.values()[inputInt];
@@ -69,8 +80,11 @@ public class Main {
 					String inputLocation = input.nextLine();
 					// Using the API's geocoding service.
 					GeocodingResult[] resultsGeo =  GeocodingApi.geocode(context, inputLocation).await();
-					System.out.println("Találat: " + resultsGeo[0].formattedAddress);
-					System.out.println(resultsGeo[0].geometry.location);
+					// Writing out every result of the geocoding.
+					for(int i=0; i<resultsGeo.length; i++) {
+						System.out.println((i+1) + ". találat: " + resultsGeo[i].formattedAddress);
+						System.out.println(resultsGeo[i].geometry.location);
+					}
 					break;
 				case reverseGeocode:
 				// For coordinates as input, "case reverseGeocode" gives a location as an output.
@@ -94,14 +108,16 @@ public class Main {
 					choice = null;
 					break;
 				}
-			}catch(InputMismatchException ime) {
-				// Thrown by the scanner when e.g. the user gives a location as a coordinate.
+			/*}catch(MissingResourceException mre) {
+				// Thrown by the ResourceBundle when the 
+				System.err.println("Az API kulcs kiolvasasa sikertelen! Lekerdezes elutasitva!");
+			*/}catch(InputMismatchException ime) {
+				// Thrown by the Scanner when e.g. the user gives a location as a coordinate.
 				System.err.println("Ervenytelen bemenet!");
 			}catch(UnknownHostException uhe) {
 				System.err.println("Nincs internet eleres!");
-			}catch(ArrayIndexOutOfBoundsException aie){ 
-				// TODO
-				System.err.println("error");
+			}catch(ArrayIndexOutOfBoundsException aie){
+				System.err.println("Nem ertelmezett bemenet!");
 			}catch(ZeroResultsException zre) {
 				System.out.println("Nincs talalat.");
 			}catch(OverQueryLimitException oqle) {
@@ -113,6 +129,9 @@ public class Main {
 			}catch(UnknownErrorException uee) {
 				System.err.println("Szerver oldali hiba!");
 				System.out.println("Az ujboli lekerdezes megoldhatja a prolemat.");
+			}finally {
+			// Printing out a blank line to make the console more readable.
+				System.out.println();
 			}
 		}
 	}

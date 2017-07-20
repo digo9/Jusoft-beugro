@@ -3,11 +3,9 @@
  */
 //import java.io.FileInputStream;
 import java.io.IOException;
-//import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.InputMismatchException;
-//import java.util.MissingResourceException;
-//import java.util.Properties;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 
@@ -30,39 +28,28 @@ public class Main {
 	}
 	
 	public static void main(String[] args) throws NumberFormatException, ApiException, InterruptedException, IOException {
+		// Scanner will be used for input reading.
 		Scanner input;
+		// Initializing the global variables.
 		String inputString = "";
 		int inputInt = 0;
 		userChoice choice = null;
 		
-		/*
-		ResourceBundle bundle = ResourceBundle.getBundle("ApplicationMessages_hu_HU");
-        System.out.println(bundle.getString("CountryName"));
-		*/
-		
-		// Reading the API key out from the config.properties file.
-		//Properties prop = new Properties();
-		//InputStream propInput = null;
-		
-		//try {
-			//propInput = new FileInputStream("resources/config.properties");
-			//prop.load(propInput);
-		//} catch (IOException ioe) {
-			//System.err.println("Ervenytelen API kulcs!");
-			//System.exit(1);
-		//}
-		ResourceBundle bundle = ResourceBundle.getBundle("config");
-		GeoApiContext context = new GeoApiContext().setApiKey(bundle.getString("apikey"));
+		// Reading the API key out from config.properties file.
+		ResourceBundle configBundle = ResourceBundle.getBundle("config");
 		// Giving the API the key.
-		//GeoApiContext context = new GeoApiContext().setApiKey(prop.getProperty("apikey"));
+		GeoApiContext context = new GeoApiContext().setApiKey(configBundle.getString("apikey"));
 		
-		
+		// Deciding which language file to use by the program arguments.
+		String language = new String(args[0]);
+		String country = new String(args[1]);
+		Locale currentLocale = new Locale(language, country);
+		ResourceBundle bundle = ResourceBundle.getBundle("language", currentLocale);
+
 		while(choice != userChoice.exit) {
+			// Using the Scanner to read inputs. 
 			input = new Scanner(System.in);
-			System.out.println("Ird be a kivant muvelet sorszamat:");
-			System.out.println("1 - Koordinatak lekerese foldralyzi nev alapjan");
-			System.out.println("2 - Foldralyzi nev lekerese koordinatak alapjan");
-			System.out.println("3 - Kilepes");
+			System.out.println(bundle.getString("menu"));
 			try{ 
 			// These methods would only throw exceptions for invalid inputs.
 				inputString = input.nextLine();
@@ -76,59 +63,56 @@ public class Main {
 				switch(choice) {
 				case geocode:
 				// For a location input, "case geocode" gives coordinates as an output.
-					System.out.println("1 - Ird be a foldrajzi nevet!");
+					System.out.println(bundle.getString("choice1"));
 					String inputLocation = input.nextLine();
-					// Using the API's geocoding service.
+					// Using the API's geocoding process.
 					GeocodingResult[] resultsGeo =  GeocodingApi.geocode(context, inputLocation).await();
 					// Writing out every result of the geocoding.
 					for(int i=0; i<resultsGeo.length; i++) {
-						System.out.println((i+1) + ". találat: " + resultsGeo[i].formattedAddress);
+						System.out.println(bundle.getString("whichIs") + (i+1) + ": " + resultsGeo[i].formattedAddress);
 						System.out.println(resultsGeo[i].geometry.location);
 					}
 					break;
 				case reverseGeocode:
-				// For coordinates as input, "case reverseGeocode" gives a location as an output.
-					System.out.println("2 - Ird be a szelesseget! (pl.: 46,53097790)");
+				// For coordinates as inputs, "case reverseGeocode" gives a location as an output.
+					System.out.println(bundle.getString("choice2"));
 					double latitude = input.nextDouble();
-					System.out.println("Ird be a hosszusagot! (pl.: 20,96994310)");
 					double longitude = input.nextDouble();
-					LatLng latLng = new LatLng(latitude, longitude); // Merging "latitude" and "longitude" into one variable.
-					// Using the API's reverse geocoding service.
+					// Merging "latitude" and "longitude" into one variable.
+					LatLng latLng = new LatLng(latitude, longitude);
+					// Using the API's reverse geocoding process.
 					GeocodingResult[] resultsReverseGeo =  GeocodingApi.reverseGeocode(context, latLng).await();
 					System.out.println(resultsReverseGeo[0].formattedAddress);
 					break;
 				case exit:
 				// Closing the program and the scanner as well.
-					System.out.println("Kilepes");
+					System.out.println(bundle.getString("choice3"));
 					input.close();
 					break;
 				default:
 				// Everything else is considered as a wrong input.
-					System.err.println("Ervenytelen bemenet!");
+					System.err.println(bundle.getString("wrongInput"));
 					choice = null;
 					break;
 				}
-			/*}catch(MissingResourceException mre) {
-				// Thrown by the ResourceBundle when the 
-				System.err.println("Az API kulcs kiolvasasa sikertelen! Lekerdezes elutasitva!");
-			*/}catch(InputMismatchException ime) {
+			}catch(InputMismatchException ime) {
 				// Thrown by the Scanner when e.g. the user gives a location as a coordinate.
-				System.err.println("Ervenytelen bemenet!");
+				System.err.println(bundle.getString("InputMismatchExceptionMessage"));
 			}catch(UnknownHostException uhe) {
-				System.err.println("Nincs internet eleres!");
+				System.err.println(bundle.getString("UnknownHostExceptionMessage"));
 			}catch(ArrayIndexOutOfBoundsException aie){
-				System.err.println("Nem ertelmezett bemenet!");
+				System.err.println(bundle.getString("ArrayIndexOutOfBoundsExceptionMessage"));
 			}catch(ZeroResultsException zre) {
-				System.out.println("Nincs talalat.");
+				System.out.println(bundle.getString("ZeroResultsExceptionMessage"));
 			}catch(OverQueryLimitException oqle) {
-				System.err.println("Tul sok lekerdezes erkezett, probald meg kesobb!");
+				System.err.println(bundle.getString("OverQueryLimitExceptionMessage"));
 			}catch(RequestDeniedException rde) {
-				System.err.println("Lekerdezes elutasitva!");
+				System.err.println(bundle.getString("RequestDeniedExceptionMessage"));
 			}catch(InvalidRequestException ire) {
-				System.err.println("Hianyos lekerdezes!");
+				System.err.println(bundle.getString("InvalidRequestExceptionMessage"));
 			}catch(UnknownErrorException uee) {
-				System.err.println("Szerver oldali hiba!");
-				System.out.println("Az ujboli lekerdezes megoldhatja a prolemat.");
+				System.err.println(bundle.getString("UnknownErrorExceptionMessage1"));
+				System.out.println(bundle.getString("UnknownErrorExceptionMessage2"));
 			}finally {
 			// Printing out a blank line to make the console more readable.
 				System.out.println();
